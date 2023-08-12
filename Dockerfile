@@ -1,14 +1,24 @@
-# Use a lightweight base image
-FROM alpine:3.14
+# Use an appropriate base image for your application
+FROM ubuntu:20.04
+
+# Set environment variables if needed
+ENV APP_ENV=production
 
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy the compiled or packaged application files into the container
-COPY target/* /app/
+# Copy application files into the container
+COPY . /app
+
+# Install any necessary dependencies or runtime requirements
+RUN apt-get update && \
+    apt-get install -y \
+    your-dependency1 \
+    your-dependency2 \
+    && apt-get clean
 
 # Expose the port your application listens on
-EXPOSE 8080
+EXPOSE 80
 
 # Command to run your application
-CMD ["./your-app-binary"]
+CMD ["your-start-command"]
