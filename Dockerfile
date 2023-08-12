@@ -7,15 +7,16 @@ ENV APP_ENV=production
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy application files into the container
-COPY . /app
-
-# Install any necessary dependencies or runtime requirements
+# Update package lists and install dependencies
 RUN apt-get update && \
     apt-get install -y \
     your-dependency1 \
-    your-dependency2 \
-    && apt-get clean
+    your-dependency2 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy application files into the container
+COPY . /app
 
 # Expose the port your application listens on
 EXPOSE 80
