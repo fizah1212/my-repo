@@ -93,5 +93,5 @@ jobs:
         cluster: ${{ env.ECS_CLUSTER }}
         wait-for-service-stability: true
         target-group: arn:aws:elasticloadbalancing:us-east-1:056665234171:targetgroup/my-tg/5eeb693b63cc0286
-        container-name: my-container  # Replace with your container name
+        container-name: my-container
         container-port: 80
