@@ -55,10 +55,11 @@ jobs:
     - name: Set Environment File
       id: set_env
       run: |
-          echo "TASK_DEFINITION=my-task-def-name" >> ecs-env
-          echo "CLUSTER_NAME=my-cluster-name" >> ecs-env
-          echo "SERVICE_NAME=my-service-name" >> ecs-env
-          continue-on-error: true
+        echo "TASK_DEFINITION=my-task-def-name" >> ecs-env
+        echo "CLUSTER_NAME=my-cluster-name" >> ecs-env
+        echo "SERVICE_NAME=my-service-name" >> ecs-env
+      continue-on-error: true
+      shell: bash
           
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
