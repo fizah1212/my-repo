@@ -41,29 +41,28 @@ env:
                                                # containerDefinitions section of your task definition
 
 jobs:
-    test:
-      runs-on : ubuntu-latest
-      strategy:
-        matrix:
-          node-version: [8.x,10.x,12.x]
-      steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js ${{ matrix.node-version }} 
-        uses: actions/setup-node@v1
-        with: 
-          node-version: ${{ matrix.node-version }}
-      - name: npm install and test
-        run: |
-          npm install
-          npm run build --if-present 
-          npm test
+  test:
+    runs-on : ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [8.x,10.x,12.x]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }} 
+      uses: actions/setup-node@v1
+      with: 
+        node-version: ${{ matrix.node-version }}
+    - name: npm install and test
+      run: |
+        npm install
+        npm run build --if-present 
+        npm test
           
-deploy:
+  deploy:
     needs: [test]
     runs-on: ubuntu-latest
-    steps: 
-
     steps:
+      
     - name: Checkout
       uses: actions/checkout@v3
 
