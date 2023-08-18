@@ -50,16 +50,12 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v2
 
-    - name: Set Environment File
-      id: set_env
-      run: |
-        echo "TASK_DEFINITION=my-task-def-name" >> ecs-env
-        echo "CLUSTER_NAME=my-cluster-name" >> ecs-env
-        echo "SERVICE_NAME=my-service-name" >> ecs-env
-      continue-on-error: true
-      shell: bash
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+          node-version: '16'
           
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -87,7 +83,13 @@ jobs:
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-        
+
+    - name: Create Environment File
+      run: |
+          echo "TASK_DEFINITION=${{ steps.task-def.outputs.task-definition }}" >> $GITHUB_ENV
+          echo "SERVICE_NAME=${{ env.ECS_SERVICE }}" >> $GITHUB_ENV
+          echo "CLUSTER_NAME=${{ env.ECS_CLUSTER }}" >> $GITHUB_ENV
+          
     - name: Fill in the new image ID in the Amazon ECS task definition
       id: task-def
       uses: aws-actions/amazon-ecs-render-task-definition@v1
@@ -97,7 +99,7 @@ jobs:
         image: ${{ steps.build-image.outputs.image }}
 
     - name: Deploy Amazon ECS task definition
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v2
       with:
         task-definition: ${{ steps.task-def.outputs.task-definition }}
         service: my-service
