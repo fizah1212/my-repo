@@ -1,4 +1,7 @@
-FROM ubuntu
-Maintainer ......
-RUN apt-get update -y && apt-get upgrade -y
-CMD ["echo", "Hello World! from my first docker inage"]
+FROM node:alpine
+RUN mkdir -p /usr/src/calc
+WORKDIR /usr/src/calc
+COPY . .
+RUN npm install
+# EXPOSE 3000
+CMD [ "node", "calculator.js" ]
