@@ -31,45 +31,57 @@ on:
     branches: [ "main" ]
 
 env:
-  AWS_REGION: us-east-1                   # set this to your preferred AWS region, e.g. us-west-1
+  AWS_REGION: us-east-1                    # set this to your preferred AWS region, e.g. us-west-1
   ECR_REPOSITORY: my-ecr-repo           # set this to your Amazon ECR repository name
   ECS_SERVICE: my-service                 # set this to your Amazon ECS service name
-  ECS_CLUSTER: my-cluster                # set this to your Amazon ECS cluster name
+  ECS_CLUSTER: my-cluster                 # set this to your Amazon ECS cluster name
   ECS_TASK_DEFINITION: .aws/task-definition.json # set this to the path to your Amazon ECS task definition
                                                # file, e.g. .aws/task-definition.json
-  CONTAINER_NAME: my-container           # set this to the name of the container in the
+  CONTAINER_NAME: my-container          # set this to the name of the container in the
                                                # containerDefinitions section of your task definition
 
-permissions:
-  contents: read
-
 jobs:
-  deploy:
-    name: Deploy
+    test:
+      runs-on : ubuntu-latest
+      strategy:
+        matrix:
+          node-version: [8.x,10.x,12.x]
+      steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }} 
+        uses: actions/setup-node@v1
+        with: 
+          node-version: ${{ matrix.node-version }}
+      - name: npm install and test
+        run: |
+          npm install
+          npm run build --if-present 
+          npm test
+          
+deploy:
+    needs: [test]
     runs-on: ubuntu-latest
+    steps: 
 
     steps:
     - name: Checkout
       uses: actions/checkout@v3
-          
+
     - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
+      uses: aws-actions/configure-aws-credentials@v1
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
+        aws-region: ${{ env.AWS_REGION }}
 
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
-      with:
-          mask-password: 'true'
-          
+
     - name: Build, tag, and push image to Amazon ECR
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        REPOSITORY: my-ecr-repo
         IMAGE_TAG: ${{ github.sha }}
       run: |
         # Build a docker container and
@@ -79,26 +91,19 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-    - name: Create Environment File
-      run: |
-          echo "TASK_DEFINITION=${{ steps.task-def.outputs.task-definition }}" >> $GITHUB_ENV
-          echo "SERVICE_NAME=${{ env.ECS_SERVICE }}" >> $GITHUB_ENV
-          echo "CLUSTER_NAME=${{ env.ECS_CLUSTER }}" >> $GITHUB_ENV
-          
     - name: Fill in the new image ID in the Amazon ECS task definition
       id: task-def
       uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
         task-definition: ${{ env.ECS_TASK_DEFINITION }}
-        container-name: my-container
+        container-name: ${{ env.CONTAINER_NAME }}
         image: ${{ steps.build-image.outputs.image }}
 
     - name: Deploy Amazon ECS task definition
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
         task-definition: ${{ steps.task-def.outputs.task-definition }}
-        service: my-service
-        cluster: my-cluster
+        service: ${{ env.ECS_SERVICE }}
+        cluster: ${{ env.ECS_CLUSTER }}
         wait-for-service-stability: true
-
         
