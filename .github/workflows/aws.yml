@@ -24,10 +24,12 @@
 #    See the documentation for each action used below for the recommended IAM policies for this IAM user,
 #    and best practices on handling the access key credentials.
 
-name: Deploy to Amazon ECS
+name: CI/CD
 
 on:
   push:
+    branches: [ "main" ]
+  pull_request:
     branches: [ "main" ]
 
 env:
@@ -45,7 +47,7 @@ jobs:
     runs-on : ubuntu-latest
     strategy:
       matrix:
-        node-version: [8.x,10.x,12.x]
+        node-version: [8.x, 10.x, 12.x]
     steps:
     - uses: actions/checkout@v2
     - name: Use Node.js ${{ matrix.node-version }} 
@@ -105,4 +107,3 @@ jobs:
         service: ${{ env.ECS_SERVICE }}
         cluster: ${{ env.ECS_CLUSTER }}
         wait-for-service-stability: true
-        
