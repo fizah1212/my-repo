@@ -88,3 +88,4 @@ jobs:
         service: my-service
         cluster: my-cluster
         wait-for-service-stability: true
+
